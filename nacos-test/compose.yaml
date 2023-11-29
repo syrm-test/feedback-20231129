@@ -1,0 +1,46 @@
+# https://docs.docker.com/compose/compose-file/
+version: "3.8"
+services:
+
+    nacos:
+        image: "nacos/nacos-server:v2.2.3"
+        environment:
+            - SPRING_DATASOURCE_PLATFORM=mysql
+            - PREFER_HOST_MODE=hostname
+            - MODE=standalone
+            - MYSQL_SERVICE_HOST=mysql
+            - MYSQL_SERVICE_DB_NAME=nacos_config
+            - MYSQL_SERVICE_PORT=3306
+            - MYSQL_SERVICE_USER=root
+            - MYSQL_SERVICE_PASSWORD=111111
+        volumes:
+            - "../log/nacos:/home/nacos/logs/:rw"
+        networks:
+            feedback-test: { }
+        ports:
+            - "8848:8848"
+            - "9848:9848"
+        depends_on:
+            - mysql
+
+    mysql:
+        image: "mysql:8.0"
+        restart: always
+        networks:
+            feedback-test: { }
+        ports:
+            - "3306:3306"
+            - "33060:33060"
+        environment:
+            - MYSQL_ROOT_PASSWORD=111111
+        volumes:
+            - "./nacos-mysql-schema.sql:/docker-entrypoint-initdb.d/mysql-schema.sql"
+
+
+networks:
+    feedback-test:
+        driver: "bridge"
+        ipam:
+            config:
+                -   subnet: "192.168.100.0/24"
+                    gateway: "192.168.100.1"
