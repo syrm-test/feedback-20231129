@@ -135,3 +135,7 @@ OS
 ```
 Linux ll 5.15.133.1-microsoft-standard-WSL2 #1 SMP Thu Oct 5 21:02:42 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
 ```
+
+# 尝试解决
+
+似乎是需要使用 `container_name` 而非 `service name`
