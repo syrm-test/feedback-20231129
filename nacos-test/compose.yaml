@@ -2,31 +2,37 @@
 version: "3.8"
 services:
 
-    nacos:
+    # https://github.com/nacos-group/nacos-docker
+    nacos-server:
         image: "nacos/nacos-server:v2.2.3"
-        environment:
-            - SPRING_DATASOURCE_PLATFORM=mysql
-            - PREFER_HOST_MODE=hostname
-            - MODE=standalone
-            - MYSQL_SERVICE_HOST=mysql-nacos
-            - MYSQL_SERVICE_DB_NAME=nacos_config
-            - MYSQL_SERVICE_PORT=3306
-            - MYSQL_SERVICE_USER=root
-            - MYSQL_SERVICE_PASSWORD=111111
-        volumes:
-            - "../log/nacos:/home/nacos/logs/:rw"
+        restart: on-failure
         networks:
             feedback-test: { }
         ports:
             - "8848:8848"
             - "9848:9848"
+        environment:
+            - SPRING_DATASOURCE_PLATFORM=mysql
+            - PREFER_HOST_MODE=hostname
+            - MODE=standalone
+            - MYSQL_SERVICE_HOST=mysql
+            - MYSQL_SERVICE_PORT=3306
+            - MYSQL_SERVICE_DB_NAME=nacos_config
+            - MYSQL_SERVICE_USER=root
+            - MYSQL_SERVICE_PASSWORD=111111
+        volumes:
+            - "../log/nacos:/home/nacos/logs/"
+        healthcheck:
+            test: [ "CMD-SHELL", "curl -s -I http://localhost:8848 | grep -q 'HTTP/1.1 404'" ]
+            interval: 5s
+            timeout: 10s
+            retries: 10
         depends_on:
-            - mysql
+            mysql:
+                condition: service_healthy
 
     mysql:
-        container_name: "mysql-nacos"
         image: "mysql:8.0"
-        restart: always
         networks:
             feedback-test: { }
         ports:
@@ -35,9 +41,12 @@ services:
         environment:
             - MYSQL_ROOT_PASSWORD=111111
         volumes:
-            - "./nacos-mysql-schema.sql:/docker-entrypoint-initdb.d/mysql-schema.sql"
-
-
+            - "./nacos-mysql-schema.sql:/docker-entrypoint-initdb.d/nacos-mysql-schema.sql"
+        healthcheck:
+            test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+            interval: 5s
+            timeout: 10s
+            retries: 10
 networks:
     feedback-test:
         driver: "bridge"
