@@ -20,6 +20,7 @@ services:
             - MYSQL_SERVICE_DB_NAME=nacos_config
             - MYSQL_SERVICE_USER=root
             - MYSQL_SERVICE_PASSWORD=111111
+            - MYSQL_SERVICE_DB_PARAM=characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true
         volumes:
             - "../log/nacos:/home/nacos/logs/"
         healthcheck:
@@ -43,7 +44,8 @@ services:
         volumes:
             - "./nacos-mysql-schema.sql:/docker-entrypoint-initdb.d/nacos-mysql-schema.sql"
         healthcheck:
-            test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+            #            test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+            test: [ "CMD-SHELL", "mysqladmin ping -h localhost -u root -p111111" ]
             interval: 5s
             timeout: 10s
             retries: 10
